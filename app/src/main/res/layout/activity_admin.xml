@@ -1,22 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent" android:background="#050505">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#050505">
     <LinearLayout
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:orientation="vertical" android:gravity="center" android:padding="30dp">
-        
-        <TextView android:text="ADMIN PANEL" android:textColor="#E53935" android:textSize="24sp" android:textStyle="bold" android:layout_marginBottom="30dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-        
-        <EditText android:id="@+id/masterId" android:hint="Admin ID" android:textColor="#FFF" android:textColorHint="#888" android:backgroundTint="#D4AF37" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="15dp" android:layout_marginBottom="15dp" android:inputType="text"/>
-        
-        <EditText android:id="@+id/masterPass" android:hint="Password" android:textColor="#FFF" android:textColorHint="#888" android:inputType="textPassword" android:backgroundTint="#D4AF37" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="15dp" android:layout_marginBottom="20dp"/>
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="30dp"
+        android:gravity="center">
 
-        <EditText android:id="@+id/creditAmount" android:hint="Credits Amount (e.g. 50)" android:textColor="#FFF" android:textColorHint="#888" android:inputType="number" android:backgroundTint="#4ade80" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="15dp" android:layout_marginBottom="20dp"/>
-        
-        <Button android:id="@+id/genBtn" android:text="GENERATE KEY WITH CREDITS" android:backgroundTint="#D4AF37" android:textColor="#000" android:textStyle="bold" android:layout_width="match_parent" android:layout_height="50dp" android:layout_marginBottom="15dp"/>
-        
-        <Button android:id="@+id/addLocalCreditsBtn" android:text="ADD CREDITS TO THIS DEVICE" android:backgroundTint="#4ade80" android:textColor="#000" android:textStyle="bold" android:layout_width="match_parent" android:layout_height="50dp" android:layout_marginBottom="25dp"/>
-        
-        <TextView android:id="@+id/resultKey" android:text="---" android:textColor="#4ade80" android:textSize="22sp" android:textStyle="bold" android:layout_marginTop="10dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <TextView
+            android:text="ADMIN PANEL"
+            android:textColor="#E53935"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="30dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <!-- LOGIN SECTION -->
+        <LinearLayout
+            android:id="@+id/loginSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/adminId"
+                android:hint="Admin ID"
+                android:textColor="#FFF"
+                android:backgroundTint="#D4AF37"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="15dp"
+                android:layout_marginBottom="20dp"/>
+
+            <Button
+                android:id="@+id/loginBtn"
+                android:text="LOGIN"
+                android:backgroundTint="#D4AF37"
+                android:textColor="#000"
+                android:textStyle="bold"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"/>
+        </LinearLayout>
+
+        <!-- ADMIN CONTROLS (Hidden initially) -->
+        <LinearLayout
+            android:id="@+id/adminControls"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <Switch
+                android:id="@+id/maintenanceSwitch"
+                android:text="Maintenance Mode"
+                android:textColor="#FFF"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"/>
+
+            <Button
+                android:id="@+id/genDefaultKeyBtn"
+                android:text="GENERATE 20 CREDITS KEY"
+                android:backgroundTint="#D4AF37"
+                android:textColor="#000"
+                android:textStyle="bold"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginBottom="25dp"/>
+
+            <TextView
+                android:text="Custom Credits"
+                android:textColor="#888"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"/>
+
+            <EditText
+                android:id="@+id/customCreditAmount"
+                android:hint="Enter Credits (e.g. 50)"
+                android:inputType="number"
+                android:textColor="#FFF"
+                android:backgroundTint="#4ade80"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="15dp"
+                android:layout_marginBottom="10dp"/>
+
+            <Button
+                android:id="@+id/genCustomKeyBtn"
+                android:text="GENERATE CUSTOM KEY"
+                android:backgroundTint="#4ade80"
+                android:textColor="#000"
+                android:textStyle="bold"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginBottom="20dp"/>
+
+            <TextView
+                android:id="@+id/resultKey"
+                android:text=""
+                android:textColor="#4ade80"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:padding="15dp"
+                android:background="#1a1a1a"
+                android:fontFamily="monospace"/>
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>

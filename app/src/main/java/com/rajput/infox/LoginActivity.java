@@ -37,7 +37,6 @@ public class LoginActivity extends AppCompatActivity {
         Button loginBtn = findViewById(R.id.loginBtn);
         TextView getKeyBtn = findViewById(R.id.getKeyBtn);
 
-        // TELEGRAM LINK CLICK
         getKeyBtn.setOnClickListener(v -> {
             try {
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/AnonymouschatbotR"));
@@ -77,7 +76,6 @@ public class LoginActivity extends AppCompatActivity {
                     if (validKeys.getString(i).equals(inputKey)) return true;
                 }
             } catch (Exception e) {
-                // Fallback for offline
                 if (inputKey.startsWith("RAJPUT-")) return true; 
             }
             return false;
@@ -90,11 +88,9 @@ public class LoginActivity extends AppCompatActivity {
                 editor.putBoolean("isLoggedIn", true);
                 editor.putString("userKey", inputKey);
 
-                // Agar pehli baar login kar raha hai (credits set nahi hain), toh 20 credits do
                 if (!prefs.contains("credits")) {
-                    int startCredits = 20;
+                    int startCredits = 20; // Default
                     try {
-                        // Format: RAJPUT-[CREDITS]-[RANDOM]
                         String[] parts = inputKey.split("-");
                         if (parts.length >= 3) {
                             startCredits = Integer.parseInt(parts[1]);

@@ -2,8 +2,11 @@ package com.rajput.infox;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -15,45 +18,49 @@ public class AdminActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin);
 
-        EditText masterId = findViewById(R.id.masterId);
-        EditText masterPass = findViewById(R.id.masterPass);
-        EditText creditAmount = findViewById(R.id.creditAmount);
-        Button genBtn = findViewById(R.id.genBtn);
-        Button addLocalBtn = findViewById(R.id.addLocalCreditsBtn);
+        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+
+        EditText adminId = findViewById(R.id.adminId);
+        Button loginBtn = findViewById(R.id.loginBtn);
+        LinearLayout loginSection = findViewById(R.id.loginSection);
+        LinearLayout adminControls = findViewById(R.id.adminControls);
+
+        Switch maintenanceSwitch = findViewById(R.id.maintenanceSwitch);
+        Button genDefaultBtn = findViewById(R.id.genDefaultKeyBtn);
+        EditText customAmount = findViewById(R.id.customCreditAmount);
+        Button genCustomBtn = findViewById(R.id.genCustomKeyBtn);
         TextView resultKey = findViewById(R.id.resultKey);
 
-        genBtn.setOnClickListener(v -> {
-            String id = masterId.getText().toString().trim();
-            String pass = masterPass.getText().toString().trim();
-            String crStr = creditAmount.getText().toString().trim();
-            int cr = crStr.isEmpty() ? 20 : Integer.parseInt(crStr);
+        maintenanceSwitch.setChecked(prefs.getBoolean("is_maintenance", false));
 
-            if (id.equals("RAJPUT") && pass.equals("DIPAK999")) {
-                String random = UUID.randomUUID().toString().substring(0, 4).toUpperCase();
-                // Format: RAJPUT-[CREDITS]-[RANDOM]
-                String newKey = "RAJPUT-" + cr + "-" + random;
-                resultKey.setText(newKey);
-                Toast.makeText(this, "Key Generated. Add to config.json", Toast.LENGTH_LONG).show();
+        loginBtn.setOnClickListener(v -> {
+            if (adminId.getText().toString().trim().equals("RAJPUT")) {
+                loginSection.setVisibility(View.GONE);
+                adminControls.setVisibility(View.VISIBLE);
             } else {
-                Toast.makeText(this, "Invalid Admin ID or Password", Toast.LENGTH_SHORT).show();
-                resultKey.setText("---");
+                Toast.makeText(this, "Invalid Admin ID", Toast.LENGTH_SHORT).show();
             }
         });
 
-        addLocalBtn.setOnClickListener(v -> {
-            String id = masterId.getText().toString().trim();
-            String pass = masterPass.getText().toString().trim();
-            String crStr = creditAmount.getText().toString().trim();
-            int cr = crStr.isEmpty() ? 20 : Integer.parseInt(crStr);
+        maintenanceSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            prefs.edit().putBoolean("is_maintenance", isChecked).apply();
+            Toast.makeText(this, isChecked ? "Maintenance ON" : "Maintenance OFF", Toast.LENGTH_SHORT).show();
+        });
 
-            if (id.equals("RAJPUT") && pass.equals("DIPAK999")) {
-                SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-                int current = prefs.getInt("credits", 0);
-                prefs.edit().putInt("credits", current + cr).apply();
-                Toast.makeText(this, cr + " Credits added to this device!", Toast.LENGTH_LONG).show();
-            } else {
-                Toast.makeText(this, "Invalid Admin ID or Password", Toast.LENGTH_SHORT).show();
+        genDefaultBtn.setOnClickListener(v -> {
+            String key = "RAJPUT-20-" + UUID.randomUUID().toString().substring(0, 4).toUpperCase();
+            resultKey.setText(key);
+        });
+
+        genCustomBtn.setOnClickListener(v -> {
+            String amtStr = customAmount.getText().toString().trim();
+            if (amtStr.isEmpty()) {
+                Toast.makeText(this, "Enter amount", Toast.LENGTH_SHORT).show();
+                return;
             }
+            int amt = Integer.parseInt(amtStr);
+            String key = "RAJPUT-" + amt + "-" + UUID.randomUUID().toString().substring(0, 4).toUpperCase();
+            resultKey.setText(key);
         });
     }
 }

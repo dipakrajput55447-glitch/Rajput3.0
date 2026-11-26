@@ -4,42 +4,41 @@ import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
-import org.json.JSONObject;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 public class MainActivity extends AppCompatActivity {
     private WebView webView;
     private MediaPlayer mediaPlayer;
+    private TextView tvCredits;
     private static final String HOME_URL = "https://dipakrajput55447-glitch.github.io/RajputInfox/";
-    private static final String CONFIG_URL = "https://raw.githubusercontent.com/dipakrajput55447-glitch/Rajput3.0/main/config.json";
 
     @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        tvCredits = findViewById(R.id.tvCredits);
+        webView = findViewById(R.id.webView);
+        Button adminBtn = findViewById(R.id.adminBtn);
+
+        updateCreditUI();
 
         try {
             mediaPlayer = MediaPlayer.create(this, R.raw.bgm);
@@ -50,12 +49,6 @@ public class MainActivity extends AppCompatActivity {
             }
         } catch (Exception ignored) {}
 
-        new CheckMaintenance().execute();
-
-        webView = findViewById(R.id.webView);
-        Button adminBtn = findViewById(R.id.adminBtn);
-        
-        webView.setBackgroundColor(Color.BLACK);
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
@@ -75,42 +68,37 @@ public class MainActivity extends AppCompatActivity {
 
         webView.loadUrl(HOME_URL);
 
-        // Explicit Admin Button
         adminBtn.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, AdminActivity.class)));
     }
 
-    private class CheckMaintenance extends AsyncTask<Void, Void, String> {
-        @Override
-        protected String doInBackground(Void... voids) {
-            try {
-                URL url = new URL(CONFIG_URL);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                StringBuilder sb = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) sb.append(line);
-                reader.close();
-                return sb.toString();
-            } catch (Exception e) { return null; }
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            if (result != null) {
-                try {
-                    JSONObject json = new JSONObject(result);
-                    if (json.getBoolean("maintenance_mode")) {
-                        String msg = json.getString("maintenance_msg");
-                        new androidx.appcompat.app.AlertDialog.Builder(MainActivity.this)
-                            .setTitle("Under Maintenance").setMessage(msg).setCancelable(false)
-                            .setPositiveButton("Exit", (d, w) -> finish()).show();
-                    }
-                } catch (Exception ignored) {}
-            }
-        }
+    private void updateCreditUI() {
+        int credits = getSharedPreferences("AppPrefs", MODE_PRIVATE).getInt("credits", 0);
+        tvCredits.setText("Credits: " + credits);
     }
 
     private class Bridge {
+        @JavascriptInterface
+        public boolean useCredit() {
+            SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+            int current = prefs.getInt("credits", 0);
+            if (current > 0) {
+                prefs.edit().putInt("credits", current - 1).apply();
+                runOnUiThread(() -> updateCreditUI());
+                return true;
+            }
+            return false;
+        }
+
+        @JavascriptInterface
+        public int getCredits() {
+            return getSharedPreferences("AppPrefs", MODE_PRIVATE).getInt("credits", 0);
+        }
+
+        @JavascriptInterface
+        public boolean isMaintenance() {
+            return getSharedPreferences("AppPrefs", MODE_PRIVATE).getBoolean("is_maintenance", false);
+        }
+
         @JavascriptInterface
         public void saveFile(String filename, String content) {
             try {
@@ -128,27 +116,10 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> Toast.makeText(MainActivity.this, "Saved to Downloads", Toast.LENGTH_SHORT).show());
             } catch (Exception ignored) {}
         }
-
-        // CREDITS SYSTEM CHECK
-        @JavascriptInterface
-        public boolean useCredit() {
-            SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-            int current = prefs.getInt("credits", 0);
-            if (current > 0) {
-                prefs.edit().putInt("credits", current - 1).apply();
-                return true;
-            }
-            return false;
-        }
-
-        @JavascriptInterface
-        public int getCredits() {
-            return getSharedPreferences("AppPrefs", MODE_PRIVATE).getInt("credits", 0);
-        }
     }
 
     @Override protected void onPause() { super.onPause(); if (mediaPlayer != null && mediaPlayer.isPlaying()) mediaPlayer.pause(); }
-    @Override protected void onResume() { super.onResume(); if (mediaPlayer != null && !mediaPlayer.isPlaying()) mediaPlayer.start(); }
+    @Override protected void onResume() { super.onResume(); if (mediaPlayer != null && !mediaPlayer.isPlaying()) mediaPlayer.start(); updateCreditUI(); }
     @Override protected void onDestroy() { super.onDestroy(); if (mediaPlayer != null) { mediaPlayer.stop(); mediaPlayer.release(); } }
 
     @Override
