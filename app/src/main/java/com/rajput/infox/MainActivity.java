@@ -3,7 +3,6 @@ package com.rajput.infox;
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
@@ -16,7 +15,6 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import java.io.OutputStream;
@@ -25,7 +23,6 @@ import java.nio.charset.StandardCharsets;
 public class MainActivity extends AppCompatActivity {
     private WebView webView;
     private MediaPlayer mediaPlayer;
-    private TextView tvCredits;
     private static final String HOME_URL = "https://dipakrajput55447-glitch.github.io/RajputInfox/";
 
     @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
@@ -34,21 +31,20 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        tvCredits = findViewById(R.id.tvCredits);
         webView = findViewById(R.id.webView);
         Button adminBtn = findViewById(R.id.adminBtn);
 
-        updateCreditUI();
-
+        // Play Background Music
         try {
             mediaPlayer = MediaPlayer.create(this, R.raw.bgm);
-            if (mediaPlayer != null) {
-                mediaPlayer.setLooping(true);
-                mediaPlayer.setVolume(0.2f, 0.2f);
-                mediaPlayer.start();
+            if (mediaPlayer != null) { 
+                mediaPlayer.setLooping(true); 
+                mediaPlayer.setVolume(0.2f, 0.2f); 
+                mediaPlayer.start(); 
             }
         } catch (Exception ignored) {}
 
+        // WebView Setup
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
@@ -68,35 +64,14 @@ public class MainActivity extends AppCompatActivity {
 
         webView.loadUrl(HOME_URL);
 
+        // Admin Button Click
         adminBtn.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, AdminActivity.class)));
-    }
-
-    private void updateCreditUI() {
-        int credits = getSharedPreferences("AppPrefs", MODE_PRIVATE).getInt("credits", 0);
-        tvCredits.setText("Credits: " + credits);
     }
 
     private class Bridge {
         @JavascriptInterface
-        public boolean useCredit() {
-            SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-            int current = prefs.getInt("credits", 0);
-            if (current > 0) {
-                prefs.edit().putInt("credits", current - 1).apply();
-                runOnUiThread(() -> updateCreditUI());
-                return true;
-            }
-            return false;
-        }
-
-        @JavascriptInterface
-        public int getCredits() {
-            return getSharedPreferences("AppPrefs", MODE_PRIVATE).getInt("credits", 0);
-        }
-
-        @JavascriptInterface
-        public boolean isMaintenance() {
-            return getSharedPreferences("AppPrefs", MODE_PRIVATE).getBoolean("is_maintenance", false);
+        public void openAdmin() {
+            runOnUiThread(() -> startActivity(new Intent(MainActivity.this, AdminActivity.class)));
         }
 
         @JavascriptInterface
@@ -119,12 +94,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override protected void onPause() { super.onPause(); if (mediaPlayer != null && mediaPlayer.isPlaying()) mediaPlayer.pause(); }
-    @Override protected void onResume() { super.onResume(); if (mediaPlayer != null && !mediaPlayer.isPlaying()) mediaPlayer.start(); updateCreditUI(); }
+    @Override protected void onResume() { super.onResume(); if (mediaPlayer != null && !mediaPlayer.isPlaying()) mediaPlayer.start(); }
     @Override protected void onDestroy() { super.onDestroy(); if (mediaPlayer != null) { mediaPlayer.stop(); mediaPlayer.release(); } }
-
-    @Override
-    public void onBackPressed() {
-        if (webView.canGoBack()) webView.goBack();
-        else super.onBackPressed();
-    }
+    @Override public void onBackPressed() { if (webView.canGoBack()) webView.goBack(); else super.onBackPressed(); }
 }

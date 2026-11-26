@@ -7,20 +7,18 @@
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/Theme.RajputInfo">
+        android:theme="@style/Theme.RajputInfo"
+        android:usesCleartextTraffic="true">
         
-        <!-- Login Screen -->
-        <activity android:name=".LoginActivity" android:exported="true">
+        <!-- Direct MainActivity Launch -->
+        <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
         
-        <!-- Main WebView -->
-        <activity android:name=".MainActivity" android:exported="false" android:configChanges="orientation|screenSize|keyboardHidden"/>
-        
-        <!-- Admin Panel -->
+        <!-- Admin Panel (Hidden) -->
         <activity android:name=".AdminActivity" android:exported="false"/>
     </application>
 </manifest>
