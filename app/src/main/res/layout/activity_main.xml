@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#050505">
+    
+    <WebView
+        android:id="@+id/webView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Admin Button Screen ke top right corner mein -->
+    <Button
+        android:id="@+id/adminBtn"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_margin="15dp"
+        android:text="⚙️"
+        android:textSize="24sp"
+        android:backgroundTint="#D4AF37"
+        android:padding="0dp"
+        android:elevation="10dp" />
+</RelativeLayout>

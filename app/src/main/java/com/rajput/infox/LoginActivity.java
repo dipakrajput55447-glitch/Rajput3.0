@@ -2,10 +2,12 @@ package com.rajput.infox;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import org.json.JSONArray;
@@ -33,6 +35,17 @@ public class LoginActivity extends AppCompatActivity {
 
         EditText keyInput = findViewById(R.id.keyInput);
         Button loginBtn = findViewById(R.id.loginBtn);
+        TextView getKeyBtn = findViewById(R.id.getKeyBtn);
+
+        // TELEGRAM LINK CLICK
+        getKeyBtn.setOnClickListener(v -> {
+            try {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/AnonymouschatbotR"));
+                startActivity(intent);
+            } catch (Exception e) {
+                Toast.makeText(this, "Telegram not installed", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         loginBtn.setOnClickListener(v -> {
             String key = keyInput.getText().toString().trim().toUpperCase();
@@ -47,16 +60,11 @@ public class LoginActivity extends AppCompatActivity {
     private class VerifyKey extends AsyncTask<String, Void, Boolean> {
         private String inputKey;
         @Override
-        protected void onPreExecute() { 
-            Toast.makeText(LoginActivity.this, "Verifying...", Toast.LENGTH_SHORT).show();
-        }
-        @Override
         protected Boolean doInBackground(String... params) {
             inputKey = params[0];
             try {
                 URL url = new URL(CONFIG_URL);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
                 BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                 StringBuilder sb = new StringBuilder();
                 String line;
@@ -69,22 +77,37 @@ public class LoginActivity extends AppCompatActivity {
                     if (validKeys.getString(i).equals(inputKey)) return true;
                 }
             } catch (Exception e) {
-                // Offline fallback: Allow only this specific hardcoded key if net fails
-                return inputKey.equals("RAJPUT-PRO-1234"); 
+                // Fallback for offline
+                if (inputKey.startsWith("RAJPUT-")) return true; 
             }
             return false;
         }
         @Override
         protected void onPostExecute(Boolean isValid) {
             if (isValid) {
-                getSharedPreferences("AppPrefs", MODE_PRIVATE).edit()
-                    .putBoolean("isLoggedIn", true)
-                    .putString("userKey", inputKey)
-                    .apply();
+                SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putBoolean("isLoggedIn", true);
+                editor.putString("userKey", inputKey);
+
+                // Agar pehli baar login kar raha hai (credits set nahi hain), toh 20 credits do
+                if (!prefs.contains("credits")) {
+                    int startCredits = 20;
+                    try {
+                        // Format: RAJPUT-[CREDITS]-[RANDOM]
+                        String[] parts = inputKey.split("-");
+                        if (parts.length >= 3) {
+                            startCredits = Integer.parseInt(parts[1]);
+                        }
+                    } catch (Exception ignored) {}
+                    editor.putInt("credits", startCredits);
+                }
+                editor.apply();
+
                 startActivity(new Intent(LoginActivity.this, MainActivity.class));
                 finish();
             } else {
-                Toast.makeText(LoginActivity.this, "Invalid License Key", Toast.LENGTH_LONG).show();
+                Toast.makeText(LoginActivity.this, "Invalid License Key. Contact Admin.", Toast.LENGTH_LONG).show();
             }
         }
     }

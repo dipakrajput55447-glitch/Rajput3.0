@@ -3,6 +3,7 @@ package com.rajput.infox;
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -11,12 +12,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.view.ViewGroup;
+import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import org.json.JSONObject;
@@ -32,16 +34,13 @@ public class MainActivity extends AppCompatActivity {
     private MediaPlayer mediaPlayer;
     private static final String HOME_URL = "https://dipakrajput55447-glitch.github.io/RajputInfox/";
     private static final String CONFIG_URL = "https://raw.githubusercontent.com/dipakrajput55447-glitch/Rajput3.0/main/config.json";
-    
-    // Hidden Admin Trigger Variables
-    private int tapCount = 0;
-    private long lastTapTime = 0;
 
     @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+        setContentView(R.layout.activity_main);
+
         try {
             mediaPlayer = MediaPlayer.create(this, R.raw.bgm);
             if (mediaPlayer != null) {
@@ -53,12 +52,10 @@ public class MainActivity extends AppCompatActivity {
 
         new CheckMaintenance().execute();
 
-        webView = new WebView(this);
+        webView = findViewById(R.id.webView);
+        Button adminBtn = findViewById(R.id.adminBtn);
+        
         webView.setBackgroundColor(Color.BLACK);
-        setContentView(webView, new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT));
-
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
@@ -71,28 +68,15 @@ public class MainActivity extends AppCompatActivity {
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req) {
                 String url = req.getUrl().toString();
                 if (url.startsWith("https://dipakrajput55447-glitch.github.io")) return false;
-                try {
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-                } catch (Exception ignored) {}
+                try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); } catch (Exception ignored) {}
                 return true;
             }
         });
 
         webView.loadUrl(HOME_URL);
 
-        // Hidden Admin Trigger: Tap 5 times on the screen within 2 seconds
-        webView.setOnClickListener(v -> {
-            long now = System.currentTimeMillis();
-            if (now - lastTapTime > 2000) {
-                tapCount = 0;
-            }
-            tapCount++;
-            lastTapTime = now;
-            if (tapCount == 5) {
-                tapCount = 0;
-                startActivity(new Intent(MainActivity.this, AdminActivity.class));
-            }
-        });
+        // Explicit Admin Button
+        adminBtn.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, AdminActivity.class)));
     }
 
     private class CheckMaintenance extends AsyncTask<Void, Void, String> {
@@ -118,11 +102,8 @@ public class MainActivity extends AppCompatActivity {
                     if (json.getBoolean("maintenance_mode")) {
                         String msg = json.getString("maintenance_msg");
                         new androidx.appcompat.app.AlertDialog.Builder(MainActivity.this)
-                            .setTitle("Under Maintenance")
-                            .setMessage(msg)
-                            .setCancelable(false)
-                            .setPositiveButton("Exit", (d, w) -> finish())
-                            .show();
+                            .setTitle("Under Maintenance").setMessage(msg).setCancelable(false)
+                            .setPositiveButton("Exit", (d, w) -> finish()).show();
                     }
                 } catch (Exception ignored) {}
             }
@@ -133,10 +114,7 @@ public class MainActivity extends AppCompatActivity {
         @JavascriptInterface
         public void saveFile(String filename, String content) {
             try {
-                if (Build.VERSION.SDK_INT < 29) {
-                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "Requires Android 10+", Toast.LENGTH_LONG).show());
-                    return;
-                }
+                if (Build.VERSION.SDK_INT < 29) return;
                 ContentValues v = new ContentValues();
                 v.put(MediaStore.MediaColumns.DISPLAY_NAME, filename);
                 v.put(MediaStore.MediaColumns.MIME_TYPE, "text/plain");
@@ -148,18 +126,30 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
                 runOnUiThread(() -> Toast.makeText(MainActivity.this, "Saved to Downloads", Toast.LENGTH_SHORT).show());
-            } catch (Exception e) {
-                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Save failed: " + e.getMessage(), Toast.LENGTH_LONG).show());
+            } catch (Exception ignored) {}
+        }
+
+        // CREDITS SYSTEM CHECK
+        @JavascriptInterface
+        public boolean useCredit() {
+            SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+            int current = prefs.getInt("credits", 0);
+            if (current > 0) {
+                prefs.edit().putInt("credits", current - 1).apply();
+                return true;
             }
+            return false;
+        }
+
+        @JavascriptInterface
+        public int getCredits() {
+            return getSharedPreferences("AppPrefs", MODE_PRIVATE).getInt("credits", 0);
         }
     }
 
-    @Override
-    protected void onPause() { super.onPause(); if (mediaPlayer != null && mediaPlayer.isPlaying()) mediaPlayer.pause(); }
-    @Override
-    protected void onResume() { super.onResume(); if (mediaPlayer != null && !mediaPlayer.isPlaying()) mediaPlayer.start(); }
-    @Override
-    protected void onDestroy() { super.onDestroy(); if (mediaPlayer != null) { mediaPlayer.stop(); mediaPlayer.release(); } }
+    @Override protected void onPause() { super.onPause(); if (mediaPlayer != null && mediaPlayer.isPlaying()) mediaPlayer.pause(); }
+    @Override protected void onResume() { super.onResume(); if (mediaPlayer != null && !mediaPlayer.isPlaying()) mediaPlayer.start(); }
+    @Override protected void onDestroy() { super.onDestroy(); if (mediaPlayer != null) { mediaPlayer.stop(); mediaPlayer.release(); } }
 
     @Override
     public void onBackPressed() {
