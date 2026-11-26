@@ -1,0 +1,9 @@
+{
+  "maintenance_mode": false,
+  "maintenance_msg": "Server is updating. Please check back later.",
+  "valid_keys": [
+    "RAJPUT-PRO-1234",
+    "RAJPUT-PRO-5678",
+    "RAJPUT-VIP-9999"
+  ]
+}

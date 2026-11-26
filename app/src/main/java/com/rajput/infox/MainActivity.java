@@ -4,7 +4,9 @@ import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Color;
+import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -17,17 +19,39 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import org.json.JSONObject;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 public class MainActivity extends AppCompatActivity {
     private WebView webView;
+    private MediaPlayer mediaPlayer;
     private static final String HOME_URL = "https://dipakrajput55447-glitch.github.io/RajputInfox/";
+    private static final String CONFIG_URL = "https://raw.githubusercontent.com/dipakrajput55447-glitch/Rajput3.0/main/config.json";
+    
+    // Hidden Admin Trigger Variables
+    private int tapCount = 0;
+    private long lastTapTime = 0;
 
     @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        try {
+            mediaPlayer = MediaPlayer.create(this, R.raw.bgm);
+            if (mediaPlayer != null) {
+                mediaPlayer.setLooping(true);
+                mediaPlayer.setVolume(0.2f, 0.2f);
+                mediaPlayer.start();
+            }
+        } catch (Exception ignored) {}
+
+        new CheckMaintenance().execute();
 
         webView = new WebView(this);
         webView.setBackgroundColor(Color.BLACK);
@@ -38,12 +62,8 @@ public class MainActivity extends AppCompatActivity {
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
-        s.setDatabaseEnabled(true);
-        s.setLoadWithOverviewMode(true);
-        s.setUseWideViewPort(true);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-        s.setUserAgentString(s.getUserAgentString() + " RajputInfoApp/1.0");
-
+        
         webView.addJavascriptInterface(new Bridge(), "AndroidBridge");
 
         webView.setWebViewClient(new WebViewClient() {
@@ -58,8 +78,55 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        if (savedInstanceState == null) webView.loadUrl(HOME_URL);
-        else webView.restoreState(savedInstanceState);
+        webView.loadUrl(HOME_URL);
+
+        // Hidden Admin Trigger: Tap 5 times on the screen within 2 seconds
+        webView.setOnClickListener(v -> {
+            long now = System.currentTimeMillis();
+            if (now - lastTapTime > 2000) {
+                tapCount = 0;
+            }
+            tapCount++;
+            lastTapTime = now;
+            if (tapCount == 5) {
+                tapCount = 0;
+                startActivity(new Intent(MainActivity.this, AdminActivity.class));
+            }
+        });
+    }
+
+    private class CheckMaintenance extends AsyncTask<Void, Void, String> {
+        @Override
+        protected String doInBackground(Void... voids) {
+            try {
+                URL url = new URL(CONFIG_URL);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) sb.append(line);
+                reader.close();
+                return sb.toString();
+            } catch (Exception e) { return null; }
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            if (result != null) {
+                try {
+                    JSONObject json = new JSONObject(result);
+                    if (json.getBoolean("maintenance_mode")) {
+                        String msg = json.getString("maintenance_msg");
+                        new androidx.appcompat.app.AlertDialog.Builder(MainActivity.this)
+                            .setTitle("Under Maintenance")
+                            .setMessage(msg)
+                            .setCancelable(false)
+                            .setPositiveButton("Exit", (d, w) -> finish())
+                            .show();
+                    }
+                } catch (Exception ignored) {}
+            }
+        }
     }
 
     private class Bridge {
@@ -67,8 +134,7 @@ public class MainActivity extends AppCompatActivity {
         public void saveFile(String filename, String content) {
             try {
                 if (Build.VERSION.SDK_INT < 29) {
-                    runOnUiThread(() -> Toast.makeText(MainActivity.this,
-                            "Download requires Android 10+", Toast.LENGTH_LONG).show());
+                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "Requires Android 10+", Toast.LENGTH_LONG).show());
                     return;
                 }
                 ContentValues v = new ContentValues();
@@ -81,24 +147,23 @@ public class MainActivity extends AppCompatActivity {
                         os.write(content.getBytes(StandardCharsets.UTF_8));
                     }
                 }
-                runOnUiThread(() -> Toast.makeText(MainActivity.this,
-                        "Saved to Downloads", Toast.LENGTH_SHORT).show());
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Saved to Downloads", Toast.LENGTH_SHORT).show());
             } catch (Exception e) {
-                runOnUiThread(() -> Toast.makeText(MainActivity.this,
-                        "Save failed: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Save failed: " + e.getMessage(), Toast.LENGTH_LONG).show());
             }
         }
     }
 
     @Override
+    protected void onPause() { super.onPause(); if (mediaPlayer != null && mediaPlayer.isPlaying()) mediaPlayer.pause(); }
+    @Override
+    protected void onResume() { super.onResume(); if (mediaPlayer != null && !mediaPlayer.isPlaying()) mediaPlayer.start(); }
+    @Override
+    protected void onDestroy() { super.onDestroy(); if (mediaPlayer != null) { mediaPlayer.stop(); mediaPlayer.release(); } }
+
+    @Override
     public void onBackPressed() {
         if (webView.canGoBack()) webView.goBack();
         else super.onBackPressed();
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        webView.saveState(outState);
     }
 }

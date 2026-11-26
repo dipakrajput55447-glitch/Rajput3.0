@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:gravity="center" android:background="#050505" android:padding="30dp">
+    <TextView android:text="ADMIN ACCESS" android:textColor="#E53935" android:textSize="24sp" android:textStyle="bold" android:layout_marginBottom="30dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+    <EditText android:id="@+id/masterId" android:hint="Admin ID" android:textColor="#FFF" android:textColorHint="#888" android:backgroundTint="#D4AF37" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="15dp" android:layout_marginBottom="15dp" android:inputType="text"/>
+    <EditText android:id="@+id/masterPass" android:hint="Password" android:textColor="#FFF" android:textColorHint="#888" android:inputType="textPassword" android:backgroundTint="#D4AF37" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="15dp" android:layout_marginBottom="25dp"/>
+    <Button android:id="@+id/genBtn" android:text="AUTHENTICATE" android:backgroundTint="#D4AF37" android:textColor="#000" android:textStyle="bold" android:layout_width="match_parent" android:layout_height="50dp"/>
+    <TextView android:id="@+id/resultKey" android:text="---" android:textColor="#4ade80" android:textSize="22sp" android:textStyle="bold" android:layout_marginTop="25dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+</LinearLayout>
